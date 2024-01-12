@@ -13,30 +13,38 @@ kubectl scale --replicas=0 -n local-path-storage deployment local-path-provision
 
 kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=5m
 
+echo "Sleeping..."
 sleep 20
 
+echo "Copy to control plane..."
 docker cp ./bin/containerd test1-control-plane:/usr/local/bin/containerd
 docker cp ./bin/network-runtime test1-control-plane:/usr/bin/network-runtime
 docker cp ./bin/kubelet test1-control-plane:/usr/bin/kubelet
+docker cp ./bin/bridge test1-control-plane:/opt/cni/bin/bridge
 docker cp ./kni.service test1-control-plane:/etc/systemd/system/kni.service
 docker cp ./config.toml test1-control-plane:/etc/containerd/config.toml
 
+echo "Restart ctlplane..."
 docker exec test1-control-plane systemctl daemon-reload
 docker exec test1-control-plane systemctl start kni
 docker exec test1-control-plane systemctl restart kubelet
 docker exec test1-control-plane systemctl restart containerd
 
+echo "Copy worker..."
 docker cp ./bin/containerd test1-worker:/usr/local/bin/containerd
 docker cp ./bin/network-runtime test1-worker:/usr/bin/network-runtime
 docker cp ./bin/kubelet test1-worker:/usr/bin/kubelet
+docker cp ./bin/bridge test1-worker:/opt/cni/bin/bridge
 docker cp ./kni.service test1-worker:/etc/systemd/system/kni.service
 docker cp ./config.toml test1-worker:/etc/containerd/config.toml
 
+echo "restart worker..."
 docker exec test1-worker systemctl daemon-reload
 docker exec test1-worker systemctl start kni
 docker exec test1-worker systemctl restart kubelet
 docker exec test1-worker systemctl restart containerd
 
+echo "Wait for ready..."
 kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=5m
 
 kubectl scale --replicas=2 -n kube-system deployment coredns
