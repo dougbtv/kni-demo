@@ -19,6 +19,11 @@ tasks:
     cmds:
       - ./scripts/setup-flannel.sh
     aliases: [03-setup]
+  setup-multus:
+    desc: Setup kind cluster and install plain ole Flannel
+    cmds:
+      - ./scripts/setup-multus.sh
+    aliases: [03-setup-multus]
   setup-backwards:
     desc: Setup kind cluster and runs network-runtime/network plugins side by side
     cmds:
